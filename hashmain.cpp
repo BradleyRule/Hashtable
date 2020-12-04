@@ -7,12 +7,12 @@
 
 using namespace std;
 
-void deleteStudent(Node**&, Node**, int);
-void print(Node**);
-void createStudent(Node**&, Node**);
-void rehash(Node**&, Node**);
-void addStudent(Student*, Node**&, Node**);
-void generate(Node**&, Node**, char**, char**, int);
+void deleteStudent(Node**&, Node**, int, int&);
+void print(Node**, int&);
+void createStudent(Node**&, Node**, int&);
+void rehash(Node**&, Node**, int&);
+void addStudent(Student*, Node**&, Node**, int&);
+void generate(Node**&, Node**, char**, char**, int, int&);
 
 int main(){
 
@@ -58,7 +58,7 @@ int main(){
   char input[30];
 
 
-  
+  int size = 100;
   Node** table = NULL;
   table = new Node* [100];
   
@@ -76,18 +76,18 @@ int main(){
     cin.get();
 
     if(strcmp(input, "ADD") == 0){
-      createStudent(table, table);
+      createStudent(table, table, size);
     }
 
     else if(strcmp(input, "PRINT") == 0){
-      print(table);
+      print(table, size);
     }
 
     else if(strcmp(input, "DELETE") == 0){
       cout << "Enter the id of the student you would like to remove:" << endl;
       cin >> id;
       cin.get();
-      deleteStudent(table, table, id);
+      deleteStudent(table, table, id, size);
       id = 0;
     }
 
@@ -98,7 +98,7 @@ int main(){
       cout << "Enter the number of students you would like to generate:" << endl;
       cin >> id;
       cin.get();
-      generate(table, table, firstList, lastList, id);
+      generate(table, table, firstList, lastList, id, size);
       id = 0;
     }
 
@@ -118,7 +118,7 @@ int main(){
 }
 
 
-void createStudent(Node** &table, Node** table2){
+void createStudent(Node** &table, Node** table2, int& size){
   char* first = new char[40];
   char* last = new char[40];
   int id = 0;
@@ -141,10 +141,10 @@ void createStudent(Node** &table, Node** table2){
   newstudent->setID(id);
   newstudent->setGPA(gpa);
 
-  addStudent(newstudent, table, table2);
+  addStudent(newstudent, table, table2, size);
 }
 
-void generate(Node** &table, Node** table2, char** firstList, char** lastList, int numberStudents){
+void generate(Node** &table, Node** table2, char** firstList, char** lastList, int numberStudents, int& size){
   char* first = new char[40];
   char* last = new char[40];
   int id = 0;
@@ -166,20 +166,20 @@ void generate(Node** &table, Node** table2, char** firstList, char** lastList, i
     gpa = ((rand()% 399 + 1) * 0.01);
     id = count + 1;
 
-    if(temp[id%sizeof(temp)] != NULL){
-      if (temp[id%sizeof(temp)]->getStudent()->getID() != id){
-	if(temp[id%sizeof(temp)]->getNext() == NULL){
+    if(temp[id%size] != NULL){
+      if (temp[id%size]->getStudent()->getID() != id){
+	if(temp[id%size]->getNext() == NULL){
 	  Student* newstudent = new Student(first);
 	  newstudent->setLastName(last);
 	  newstudent->setID(id);
 	  newstudent->setGPA(gpa);
 	  cout << "test1a" << endl;/*DELETE LATER*/
-	  addStudent(newstudent, table, table2);
+	  addStudent(newstudent, table, table2, size);
 	  cout << "test1b" << endl;/*DELETE LATER*/
 	  count++;
 	}
-	else if(temp[id%sizeof(temp)]->getNext() != NULL){
-	  current = temp[id%sizeof(temp)];
+	else if(temp[id%size]->getNext() != NULL){
+	  current = temp[id%size];
 	  while(current != NULL){
 	    if(current->getStudent()->getID() == id){
 	      idcheck = 1;
@@ -192,28 +192,26 @@ void generate(Node** &table, Node** table2, char** firstList, char** lastList, i
 	    newstudent->setID(id);
 	    newstudent->setGPA(gpa);
 	    cout << "test2a" << endl;/*DELETE LATER*/
-	    addStudent(newstudent, table, table2);
+	    addStudent(newstudent, table, table2, size);
 	    cout << "test2b" << endl;/*DELETE LATER*/
 	    count++;
 	  }
 	}
       }
     }
-    else if(temp[id%sizeof(temp)] == NULL){
+    else if(temp[id%size] == NULL){
       Student* newstudent = new Student(first);
       newstudent->setLastName(last);
       newstudent->setID(id);
       newstudent->setGPA(gpa);
       cout << "test3a" << endl;/*DELETE LATER*/
-      addStudent(newstudent, table, table2);
+      addStudent(newstudent, table, table2, size);
       cout << "test3b" << endl;/*DELETE LATER*/
       count++;
     }
 
-    for (int i = 0; i <= 40; i++){
-      first[i] = '\0';
-      last[i] = '\0';
-    }
+    first = new char[40];
+    last = new char[40];
     id = 0;
     gpa = 0;
     idcheck = 0;
@@ -223,9 +221,9 @@ void generate(Node** &table, Node** table2, char** firstList, char** lastList, i
   
 }
 
-void addStudent(Student* newstudent, Node** &table, Node** table2){
+void addStudent(Student* newstudent, Node** &table, Node** table2, int& size){
   int stepcount = 0;
-  int hashValue = newstudent->getID() % (sizeof(table2));
+  int hashValue = newstudent->getID() % (size);
   Node** temp = table;
   if(temp[hashValue] == NULL){
     Node* newnode = new Node();
@@ -245,40 +243,42 @@ void addStudent(Student* newstudent, Node** &table, Node** table2){
     newnode->setStudent(newstudent);
     current->setNext(newnode);
     if (stepcount >= 2){
-      rehash(table, table2);
+      rehash(table, table2, size);
     }
   }
 }
 
 
-void rehash(Node** &table, Node** table2){
+void rehash(Node** &table, Node** table2, int& size){
   cout << "REHASH" << endl;/*DELETE LATER*/
   Node** temp = NULL;
   temp = table;
+  int tempsize = size;
 
   Node* searcher = NULL;
   Node* current = NULL;
   Node* next = NULL;
   
   Node** newtable = NULL;
-  newtable = new Node* [2*sizeof(temp)];
-  for(int i = 0; i <= sizeof(temp); i++){
+  newtable = new Node* [2*size];
+  size = size*2;
+  for(int i = 0; i <= size; i++){
     newtable[i] = NULL;
   }
 
-  for (int i = 0; i <= sizeof(temp); i++){
+  for (int i = 0; i <= tempsize; i++){
     if (temp[i] != NULL){
       current = temp[i];
       next = temp[i];
       while(current != NULL){
 	next = current->getNext();
-	  if(newtable[current->getStudent()->getID() % sizeof(newtable)] == NULL){
+	  if(newtable[current->getStudent()->getID() % size] == NULL){
 	    current->setNext(NULL);
-	    newtable[current->getStudent()->getID() % sizeof(newtable)] = current;
+	    newtable[current->getStudent()->getID() % size] = current;
 	    current = next;
 	  }
-	  else if (newtable[current->getStudent()->getID() % sizeof(newtable)] != NULL){
-	    searcher = newtable[current->getStudent()->getID() % sizeof(newtable)];
+	  else if (newtable[current->getStudent()->getID() % size] != NULL){
+	    searcher = newtable[current->getStudent()->getID() % size];
 	    while(searcher->getNext() != NULL){
 	      searcher = searcher->getNext();
 	    }
@@ -294,9 +294,9 @@ void rehash(Node** &table, Node** table2){
     table = newtable;
 }
 
-void print(Node** table){
+void print(Node** table, int& size){
   Node * current = NULL;
-  for(int i = 0; i <= sizeof(table); i++){
+  for(int i = 0; i <= size; i++){
     if(table[i] != NULL){
       current = table[i];
       while(current != NULL){
@@ -312,10 +312,10 @@ void print(Node** table){
   }
 }
 
-void deleteStudent(Node** &table, Node** table2, int id){
+void deleteStudent(Node** &table, Node** table2, int id, int& size){
   bool onlyone = 0;
-  if (table2[id % sizeof(table2)] != NULL){
-    Node* current = table2[id % sizeof(table2)];
+  if (table2[id % size] != NULL){
+    Node* current = table2[id % size];
     Node* previous = current;
     while (current != NULL){
       if(current->getStudent()->getID() == id){
@@ -325,15 +325,15 @@ void deleteStudent(Node** &table, Node** table2, int id){
       current = current->getNext();
     }
 
-    if(current == table2[id % sizeof(table2)]){
+    if(current == table2[id % size]){
       if(current != NULL){
 	if (current->getNext() == NULL){
 	  delete current;
 	  current = NULL;
-	  table2[id % sizeof(table2)] = NULL;
+	  table2[id % size] = NULL;
 	}
 	else if(current->getNext() != NULL){
-	  table2[id % sizeof(table2)] = current->getNext();
+	  table2[id % size] = current->getNext();
 	  delete current;
 	  current = NULL;
 	}
@@ -342,7 +342,7 @@ void deleteStudent(Node** &table, Node** table2, int id){
 	cout << "Could not find a student with a matching ID" << endl;
       }
     }
-    else if (current != table2[id % sizeof(table2)]){
+    else if (current != table2[id % size]){
       if(current != NULL){
 	previous->setNext(current->getNext());
 	delete current;
